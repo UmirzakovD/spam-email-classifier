@@ -6,6 +6,8 @@ required (see ``data/README.md`` for source details and citation).
 """
 import csv
 import io
+import time
+import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -16,6 +18,33 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 RAW_CSV_PATH = DATA_DIR / "sms_spam.csv"
 DATASET_URL = "https://archive.ics.uci.edu/static/public/228/sms+spam+collection.zip"
 DATASET_MEMBER = "SMSSpamCollection"
+DOWNLOAD_TIMEOUT_SECONDS = 30
+DOWNLOAD_RETRIES = 3
+DOWNLOAD_RETRY_BACKOFF_SECONDS = 3
+
+
+class DatasetDownloadError(RuntimeError):
+    """Raised when the dataset can't be downloaded after all retries."""
+
+
+def _fetch_zip_bytes() -> bytes:
+    request = urllib.request.Request(DATASET_URL, headers={"User-Agent": "spam-classifier/1.0"})
+    last_error = None
+    for attempt in range(1, DOWNLOAD_RETRIES + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response:
+                return response.read()
+        except (urllib.error.URLError, TimeoutError) as exc:
+            last_error = exc
+            print(f"  Download attempt {attempt}/{DOWNLOAD_RETRIES} failed ({exc}).")
+            if attempt < DOWNLOAD_RETRIES:
+                time.sleep(DOWNLOAD_RETRY_BACKOFF_SECONDS * attempt)
+
+    raise DatasetDownloadError(
+        f"Could not download the dataset from {DATASET_URL} after {DOWNLOAD_RETRIES} attempts "
+        f"({last_error}). Check your internet connection and try again -- "
+        "if the problem persists, the UCI mirror may be temporarily down."
+    ) from last_error
 
 
 def download_dataset(force: bool = False) -> Path:
@@ -26,15 +55,16 @@ def download_dataset(force: bool = False) -> Path:
 
     Returns:
         Path to the cached CSV file (columns: ``label``, ``text``).
+
+    Raises:
+        DatasetDownloadError: If the download fails after all retries.
     """
     if RAW_CSV_PATH.exists() and not force:
         return RAW_CSV_PATH
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     print(f"Downloading dataset from {DATASET_URL} ...")
-    request = urllib.request.Request(DATASET_URL, headers={"User-Agent": "spam-classifier/1.0"})
-    with urllib.request.urlopen(request) as response:
-        zip_bytes = response.read()
+    zip_bytes = _fetch_zip_bytes()
 
     with zipfile.ZipFile(io.BytesIO(zip_bytes)) as archive:
         with archive.open(DATASET_MEMBER) as member:

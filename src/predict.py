@@ -10,6 +10,7 @@ import sys
 
 import joblib
 
+from src.data_loader import DatasetDownloadError
 from src.preprocessing import clean_text
 from src.train import MODEL_PATH, VECTORIZER_PATH, train
 
@@ -62,7 +63,11 @@ def main():
     parser.add_argument("text", nargs="*", help="Message text to classify. Omit for interactive mode.")
     args = parser.parse_args()
 
-    model, vectorizer = _load_artifacts()
+    try:
+        model, vectorizer = _load_artifacts()
+    except DatasetDownloadError as exc:
+        print(f"\nError: {exc}", file=sys.stderr)
+        sys.exit(1)
 
     if args.text:
         message = " ".join(args.text)

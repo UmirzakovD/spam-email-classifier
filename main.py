@@ -7,6 +7,9 @@ Running ``python main.py`` will:
   3. Run a couple of sample predictions and drop into an interactive
      prompt where you can type your own messages.
 """
+import sys
+
+from src.data_loader import DatasetDownloadError
 from src.predict import _print_result, predict
 from src.train import MODEL_PATH, VECTORIZER_PATH, train
 
@@ -22,7 +25,11 @@ def main():
         print("(Delete the files in 'models/' to retrain from scratch.)\n")
     else:
         print("No trained model found - training now...\n")
-        train()
+        try:
+            train()
+        except DatasetDownloadError as exc:
+            print(f"\nError: {exc}", file=sys.stderr)
+            sys.exit(1)
 
     print("\n" + "=" * 60)
     print("Spam Email / SMS Classifier - demo")
