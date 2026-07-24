@@ -20,7 +20,8 @@ features, and a clean, modular, fully tested codebase.
   **Logistic Regression**; the best one (by F1-score) is saved automatically
 - Full evaluation: accuracy, precision, recall, F1-score, confusion matrix
 - CLI prediction tool + interactive demo, both runnable with a single command
-- 13 unit tests covering preprocessing, training, and prediction (offline, no network needed)
+- **Web UI** (Streamlit) — classify messages from the browser, no terminal needed
+- 19 unit tests covering preprocessing, training, prediction, and the web UI (offline, no network needed)
 - EDA notebook for exploring the dataset
 - CI pipeline (GitHub Actions) running the test suite on every push, across Python 3.10–3.12
 
@@ -58,7 +59,8 @@ spam-email-classifier/
 │   └── predict.py              # Loads the model and classifies new text (CLI)
 ├── models/                    # Saved model + vectorizer (auto-populated)
 ├── tests/                     # Unit tests (pytest)
-├── main.py                    # Single-command entry point
+├── main.py                    # Single-command CLI entry point
+├── app.py                     # Streamlit web UI (`streamlit run app.py`)
 ├── requirements.txt
 ├── LICENSE
 └── .gitignore
@@ -127,6 +129,16 @@ python -m src.predict "Congratulations! You've WON a free prize, click now!"
 python -m src.predict
 ```
 
+**Web interface** (Streamlit):
+
+```bash
+streamlit run app.py
+```
+
+Opens a browser UI with a text box, one-click example messages, a spam/ham
+result with probability, and model metrics in the sidebar. Trains the model
+automatically on first launch if none is saved yet, same as `main.py`.
+
 **Use it as a library:**
 
 ```python
@@ -177,10 +189,11 @@ See the full animated demo at the top of this README, or a static version:
 pytest tests/ -v
 ```
 
-Unit tests cover text preprocessing, model training/evaluation logic, and
-prediction, using small synthetic data so they run fully offline and finish
-in under a second. CI runs the same suite on every push across Python
-3.10, 3.11, and 3.12.
+Unit tests cover text preprocessing, model training/evaluation logic,
+prediction, dataset-download retry/error handling, and the Streamlit web UI
+(via Streamlit's official headless `AppTest`), all using small synthetic
+data / mocked network calls so they run fully offline in about a second.
+CI runs the same suite on every push across Python 3.10, 3.11, and 3.12.
 
 ## Regenerating the README assets
 
@@ -197,7 +210,7 @@ python scripts/generate_assets.py
 
 ## Tech Stack
 
-Python, pandas, scikit-learn, joblib, matplotlib, pytest, Jupyter.
+Python, pandas, scikit-learn, joblib, matplotlib, pytest, Jupyter, Streamlit.
 
 ## License
 
