@@ -4,6 +4,7 @@ The dataset is fetched from the official UCI Machine Learning Repository on
 first use and cached locally as a CSV file, so no manual download step is
 required (see ``data/README.md`` for source details and citation).
 """
+import csv
 import io
 import urllib.request
 import zipfile
@@ -37,7 +38,17 @@ def download_dataset(force: bool = False) -> Path:
 
     with zipfile.ZipFile(io.BytesIO(zip_bytes)) as archive:
         with archive.open(DATASET_MEMBER) as member:
-            df = pd.read_csv(member, sep="\t", header=None, names=["label", "text"], encoding="utf-8")
+            # quoting=QUOTE_NONE: the file is plain label\ttext, not CSV-quoted.
+            # Without this, stray `"` characters inside some messages make
+            # pandas merge adjacent lines, silently dropping real rows.
+            df = pd.read_csv(
+                member,
+                sep="\t",
+                header=None,
+                names=["label", "text"],
+                encoding="utf-8",
+                quoting=csv.QUOTE_NONE,
+            )
 
     df.to_csv(RAW_CSV_PATH, index=False)
     print(f"Dataset cached at {RAW_CSV_PATH} ({len(df)} rows).")
