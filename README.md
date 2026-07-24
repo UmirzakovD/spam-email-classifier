@@ -165,6 +165,8 @@ report, are written to `models/metrics.json` after each training run.
 
 ## Demo
 
+### CLI
+
 ```
 $ python main.py
 [naive_bayes] accuracy=0.9812  f1=0.9258
@@ -183,6 +185,20 @@ See the full animated demo at the top of this README, or a static version:
 
 <img src="assets/demo.png" alt="Terminal screenshot of the CLI demo" width="700">
 
+### Web UI
+
+`streamlit run app.py` — real screenshots below (landing page, then a spam
+and a ham result):
+
+<img src="assets/webapp_demo.gif" alt="Streamlit web UI demo: landing page, spam result, ham result" width="700">
+
+<table>
+<tr>
+<td><img src="assets/webapp_spam_result.png" alt="Web UI: spam result" width="380"></td>
+<td><img src="assets/webapp_ham_result.png" alt="Web UI: ham result" width="380"></td>
+</tr>
+</table>
+
 ## Testing
 
 ```bash
@@ -197,15 +213,27 @@ CI runs the same suite on every push across Python 3.10, 3.11, and 3.12.
 
 ## Regenerating the README assets
 
-The charts and terminal mockups under `assets/` are generated from real
-project output (real dataset stats, real metrics, real predictions) by
-`scripts/generate_assets.py`. It's a dev-only utility, not required to run
-the classifier:
+Everything under `assets/` is generated from real project output — real
+dataset stats, real metrics, real predictions, and real screenshots of the
+running app — not mockups. These are dev-only utilities, not required to
+run the classifier.
+
+Charts + CLI terminal mockup:
 
 ```bash
 pip install -r requirements.txt pillow   # matplotlib is already in requirements.txt
 python -m src.train                       # produces models/metrics.json
 python scripts/generate_assets.py
+```
+
+Web UI screenshots + GIF (captured with Playwright's own isolated Chromium,
+so it never touches your regular browser profile):
+
+```bash
+pip install playwright
+playwright install chromium
+streamlit run app.py &                    # start the app in the background
+python scripts/capture_webapp_screenshots.py
 ```
 
 ## Tech Stack
